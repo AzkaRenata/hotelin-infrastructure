@@ -1,0 +1,53 @@
+version: "3.4"
+services:
+  app:
+    build:
+      args:
+        user: mujir
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: hotelin-app
+    container_name: hotelin-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - hotelin-network
+
+  db:
+    image: mysql:5.7
+    container_name: hotelin-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+    networks:
+      - hotelin-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: hotelin-nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - hotelin-network
+
+networks:
+  hotelin-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
